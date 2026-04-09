@@ -1,3 +1,7 @@
+#ifndef _WIN32
+#define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +27,14 @@ typedef struct {
 
 static clock_t g_deadline = 0;
 static int g_stop_search = 0;
+
+static char *next_token(char *str, const char *delim, char **save) {
+#ifdef _WIN32
+    return strtok_s(str, delim, save);
+#else
+    return strtok_r(str, delim, save);
+#endif
+}
 
 static int sq_index(const char *s) {
     int file = s[0] - 'a';
@@ -58,9 +70,9 @@ static void pos_from_fen(Pos *p, const char *fen) {
     buf[sizeof(buf) - 1] = 0;
 
     char *save = NULL;
-    char *placement = strtok_r(buf, " ", &save);
-    char *stm = strtok_r(NULL, " ", &save);
-    char *castling = strtok_r(NULL, " ", &save);
+    char *placement = next_token(buf, " ", &save);
+    char *stm = next_token(NULL, " ", &save);
+    char *castling = next_token(NULL, " ", &save);
     if (stm) p->white_to_move = (strcmp(stm, "w") == 0);
     if (castling) {
         p->castle_wk = (strchr(castling, 'K') != NULL);
@@ -593,8 +605,10 @@ static void parse_position(Pos *p, const char *line) {
     char *toks[128];
     int nt = 0;
     char *save = NULL;
-    for (char *tok = strtok_r(buf, " \t\r\n", &save); tok && nt < 128; tok = strtok_r(NULL, " \t\r\n", &save)) {
+    char *tok = next_token(buf, " \t\r\n", &save);
+    while (tok && nt < 128) {
         toks[nt++] = tok;
+        tok = next_token(NULL, " \t\r\n", &save);
     }
 
     int i = 1;
@@ -623,12 +637,14 @@ static int parse_movetime_ms(const char *line) {
     buf[sizeof(buf) - 1] = 0;
 
     char *save = NULL;
-    for (char *tok = strtok_r(buf, " \t\r\n", &save); tok; tok = strtok_r(NULL, " \t\r\n", &save)) {
+    char *tok = next_token(buf, " \t\r\n", &save);
+    while (tok) {
         if (strcmp(tok, "movetime") == 0) {
-            char *val = strtok_r(NULL, " \t\r\n", &save);
+            char *val = next_token(NULL, " \t\r\n", &save);
             if (val) return atoi(val);
             break;
         }
+        tok = next_token(NULL, " \t\r\n", &save);
     }
     return 500;
 }
