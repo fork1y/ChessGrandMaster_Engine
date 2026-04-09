@@ -11,8 +11,17 @@ This project builds a UCI-compatible chess engine in C for use with the course A
 ## Build
 `./build.sh`
 
+Windows:
+`build.bat`
+
 ## Run
 `./run.sh`
 
+Windows:
+`run.bat`
+
 ## Arena Use
-Build the engine first, then point Arena at the produced engine executable in this folder.
+Build the engine first, then point Arena at the produced engine launcher in this folder.
+
+- Ubuntu/Linux: use `run.sh` or the built `engine`
+- Windows: use `run.bat` or the built `engine.exe`
